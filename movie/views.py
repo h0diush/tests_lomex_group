@@ -1,7 +1,6 @@
 from django.db import connection
 from rest_framework.decorators import api_view
 from rest_framework.generics import ListAPIView
-from rest_framework.pagination import PageNumberPagination
 from rest_framework.response import Response
 
 from movie.models import Actor
@@ -33,13 +32,12 @@ def genre(request):
     all_genre = cursor.execute(
         '''select genre from movies limit 20'''
     ).fetchall()
-    test = get_genre(all_genre)
-    test.pop()
-    for genre in test:
+    list_genres = get_genre(all_genre)
+    for genre in list_genres:
         if genre == '':
             continue
         else:
-            count_movie = cursor.execute(
+            count_movie_and_rating = cursor.execute(
                 f'''SELECT COUNT(id) AS count,
                 AVG(imdb_rating)_movie FROM movies
                 WHERE genre LIKE '%{genre}%' ''',
@@ -47,8 +45,8 @@ def genre(request):
             data.append(
                 {
                     'genre': genre,
-                    'movies_count': count_movie[0],
-                    'avg_rating': round(count_movie[1], 1)
+                    'movies_count': count_movie_and_rating[0],
+                    'avg_rating': round(count_movie_and_rating[1], 1)
                 }
             )
     serializer = GenreSerializer(data, many=True)
